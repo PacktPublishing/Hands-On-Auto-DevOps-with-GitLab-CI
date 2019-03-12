@@ -1,0 +1,9 @@
+# Update for your local GitLab server
+gitlab_runner_coordinator_url: 'http://172.16.1.1/'
+# Update for your local GitLab server, group, or project
+gitlab_runner_registration_token: 'XXXXX'
+gitlab_runner_runners:
+  - name: 'Shell Runner'
+    executor: shell
+    tags:
+      - shell

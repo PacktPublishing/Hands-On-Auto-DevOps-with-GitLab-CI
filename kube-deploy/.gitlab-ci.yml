@@ -1,0 +1,172 @@
+stages:
+  - test
+  - build
+  - deploy
+  - dast
+
+variables:
+  DOCKER_IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+test-10:
+  stage: test
+  image: node:10
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+    - node_modules/
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - package-lock.json
+      - npm-audit.json
+  services:
+    - name: postgres:10
+      alias: db
+  variables:
+    POSTGRES_DB: todo
+    POSTGRES_USER: "${DBUSER}"
+    POSTGRES_PASS: "${DBPASS}"
+    DATABASE_URL: "postgres://${DBUSER}:${DBPASS}@db/todo"
+  script:
+    - ./ci-test.sh
+
+test-8:
+  stage: test
+  image: node:8
+  services:
+    - name: postgres:10
+      alias: db
+  variables:
+    POSTGRES_DB: todo
+    POSTGRES_USER: "${DBUSER}"
+    POSTGRES_PASS: "${DBPASS}"
+    DATABASE_URL: "postgres://${DBUSER}:${DBPASS}@db/todo"
+  script:
+    - ./ci-test.sh
+
+code-quality:
+  stage: test
+  image: docker:stable
+  allow_failure: true
+  services:
+    - docker:stable-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+  script:
+    - >
+      docker run --env SOURCE_CODE="$PWD"
+      --volume "$PWD":/code
+      --volume /var/run/docker.sock:/var/run/docker.sock
+      "registry.gitlab.com/gitlab-org/security-products/codequality" /code
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+  only:
+    - branches
+  except:
+    variables:
+      - $CODE_QUALITY_DISABLED
+
+build:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker info
+  script:
+    - docker build -t $DOCKER_IMAGE_TAG .
+    - docker push $DOCKER_IMAGE_TAG
+
+deploy:
+  stage: deploy
+  variables:
+    APP_NAME: production-todo
+    APP_LABEL: production
+    DEPLOY_HOST: todo.k8s.anvard.org
+  environment:
+    name: production
+    url: http://todo.k8s.anvard.org:32445/
+  image: roffe/kubectl:v1.13.0
+  script:
+    - kubectl delete --ignore-not-found=true secret gitlab-auth
+    - kubectl create secret docker-registry gitlab-auth --docker-server=$CI_REGISTRY --docker-username=$KUBE_PULL_USER --docker-password=$KUBE_PULL_PASS
+    - cat k8s.yaml | envsubst | kubectl apply -f -
+  only:
+    - master
+
+review:
+  stage: deploy
+  environment:
+    name: review/${CI_COMMIT_REF_SLUG}
+    url: http://${CI_COMMIT_REF_SLUG}-todo.k8s.anvard.org:32445/
+    on_stop: stop_review
+  variables:
+    APP_NAME: ${CI_ENVIRONMENT_SLUG}-todo
+    APP_LABEL: ${CI_ENVIRONMENT_SLUG}
+    DEPLOY_HOST: ${CI_COMMIT_REF_SLUG}-todo.k8s.anvard.org
+  image: roffe/kubectl:v1.13.0
+  script:
+    - kubectl delete --ignore-not-found=true secret gitlab-auth
+    - kubectl create secret docker-registry gitlab-auth --docker-server=$CI_REGISTRY --docker-username=$KUBE_PULL_USER --docker-password=$KUBE_PULL_PASS
+    - cat k8s.yaml | envsubst | kubectl apply -f -
+  except:
+    - master
+
+stop_review:
+  stage: deploy
+  environment:
+    name: review/${CI_COMMIT_REF_SLUG}
+    action: stop
+  variables:
+    APP_NAME: ${CI_ENVIRONMENT_SLUG}-todo
+    GIT_STRATEGY: none
+  image: roffe/kubectl:v1.13.0
+  script:
+    - kubectl delete service/${APP_NAME}
+    - kubectl delete deploy/${APP_NAME}
+    - kubectl delete service/${APP_NAME}-db
+    - kubectl delete deploy/${APP_NAME}-db
+    - kubectl delete pvc/${APP_NAME}-data
+    - kubectl delete ingress/${APP_NAME}-ingress
+  when: manual
+  except:
+    - master
+
+dast:
+  stage: dast
+  image: registry.gitlab.com/gitlab-org/security-products/zaproxy
+  variables:
+    website: "http://todo.k8s.anvard.org:32445/"
+  allow_failure: true
+  script:
+    - mkdir /zap/wrk/
+    - /zap/zap-baseline.py -J gl-dast-report.json -t $website || true
+    - cp /zap/wrk/gl-dast-report.json .
+  artifacts:
+    reports:
+      dast: gl-dast-report.json
+  only:
+    - master
+
+dast-review:
+  stage: dast
+  image: registry.gitlab.com/gitlab-org/security-products/zaproxy
+  variables:
+    website: http://${CI_COMMIT_REF_SLUG}-todo.k8s.anvard.org:32445/
+  allow_failure: true
+  script:
+    - mkdir /zap/wrk/
+    - /zap/zap-baseline.py -J gl-dast-report.json -t $website || true
+    - cp /zap/wrk/gl-dast-report.json .
+  artifacts:
+    reports:
+      dast: gl-dast-report.json
+  except:
+    - master

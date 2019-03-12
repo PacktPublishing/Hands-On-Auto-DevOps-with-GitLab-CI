@@ -1,0 +1,5 @@
+build:
+  image: node:10
+  script:
+    - npm install 
+    - npm run grunt

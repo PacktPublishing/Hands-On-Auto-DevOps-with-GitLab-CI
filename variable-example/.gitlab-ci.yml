@@ -1,0 +1,7 @@
+build:
+  script:
+    - "echo Variable 1: $VARIABLE1"
+    - "echo Variable 2: $VARIABLE2"
+    - "echo Not a variable: $NOTAVARIABLE"
+    - "echo Group variable: $GROUPVAR"
+    - ./script.sh

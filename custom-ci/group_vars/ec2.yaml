@@ -1,0 +1,4 @@
+# Configure this based on the image you choose
+ansible_ssh_user: ubuntu
+# Configure this based on the SSH private key you use for AWS
+ansible_ssh_private_key_file: ~/.ssh/id_rsa_aws

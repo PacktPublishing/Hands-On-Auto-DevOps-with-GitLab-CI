@@ -1,0 +1,2 @@
+# Remove this if you haven't switched your Ansible to Python 3:
+ansible_python_interpreter: /usr/bin/python3

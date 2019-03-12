@@ -1,0 +1,10 @@
+gitlab_runner_coordinator_url: 'https://gitlab.com/'
+# Update for your project or group
+gitlab_runner_registration_token: 'XXXXX'
+gitlab_runner_runners:
+  - name: 'Autoscaler'
+    executor: docker+machine
+    docker_image: alpine
+    docker_privileged: true
+    tags:
+      - docker-scale

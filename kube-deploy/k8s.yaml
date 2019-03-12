@@ -1,0 +1,113 @@
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5000"
+  name: ${APP_NAME}
+spec:
+  selector:
+    app: ${APP_LABEL}
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+---
+kind: Deployment
+apiVersion: apps/v1beta1
+metadata:
+  name: ${APP_NAME}
+  labels:
+    app: ${APP_LABEL}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ${APP_LABEL}
+  template:
+    metadata:
+      labels:
+        app: ${APP_LABEL}
+    spec:
+      imagePullSecrets:
+      - name: gitlab-auth
+      containers:
+      - name: ${APP_NAME}
+        image: "${DOCKER_IMAGE_TAG}"
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          value: "postgres://${DBUSER}:${DBPASS}@${APP_NAME}-db/todo"
+        ports:
+        - containerPort: 5000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ${APP_NAME}-db
+spec:
+  selector:
+    app: ${APP_LABEL}-db
+  ports:
+  - protocol: TCP
+    port: 5432
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}-db
+  labels:
+    app: ${APP_LABEL}-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${APP_LABEL}-db
+  template:
+    metadata:
+      labels:
+        app: ${APP_LABEL}-db
+    spec:
+      containers:
+      - name: ${APP_NAME}-db
+        image: postgres:10.4
+        env:
+        - name: POSTGRES_USER
+          value: "${DBUSER}"
+        - name: POSTGRES_PASSWORD
+          value: "${DBPASS}"
+        - name: PGDATA
+          value: "/data/pgdata"
+        volumeMounts:
+        - mountPath: /data
+          name: todo-data
+      volumes:
+        - name: todo-data
+          persistentVolumeClaim:
+           claimName: ${APP_NAME}-data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ${APP_NAME}-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ${APP_NAME}-ingress
+spec:
+  rules:
+    - host: ${DEPLOY_HOST}
+      http:
+        paths:
+          - backend:
+              serviceName: ${APP_NAME}
+              servicePort: 80

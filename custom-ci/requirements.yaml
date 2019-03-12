@@ -1,0 +1,4 @@
+- src: geerlingguy.docker
+- src: geerlingguy.gitlab
+- src: riemers.gitlab-runner
+- src: andrewrothstein.docker-machine

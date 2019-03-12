@@ -1,0 +1,34 @@
+{
+  "name": "todo",
+  "private": "true",
+  "version": "1.0.0",
+  "description": "a todo web application to illustrate a devops pipeline",
+  "main": "server.js",
+  "scripts": {
+    "prestart": "db-migrate up",
+    "grunt": "grunt",
+    "test": "mocha --exit"
+  },
+  "author": "Multiple, see README",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "db-migrate": "^0.11.1",
+    "db-migrate-pg": "^0.4.0",
+    "debug": "^3.1.0",
+    "express": "^4.16.3",
+    "pg": "^7.4.3"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-http": "^4.0.0",
+    "grunt": "^1.0.2",
+    "grunt-bowercopy": "^1.2.4",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.1.0",
+    "lodash": "^4.17.10",
+    "mocha": "^5.2.0",
+    "q": "^1.5.1"
+  }
+}

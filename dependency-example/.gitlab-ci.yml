@@ -1,0 +1,27 @@
+build:
+  stage: build
+  script:
+    - echo "I am an artifact" > artifact.txt
+  artifacts:
+    paths:
+      - artifact.*
+
+build2:
+  stage: build
+  script:
+    - echo "I am also an artifact" > artifact2.txt
+  artifacts:
+    paths:
+      - artifact2.*
+
+test:
+  stage: test
+  script:
+    - cat artifact*.*
+
+test2:
+  stage: test
+  dependencies:
+    - build2
+  script:
+    - cat artifact*.*

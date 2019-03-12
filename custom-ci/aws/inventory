@@ -1,0 +1,31 @@
+# This file exists to turn the dynamic AWS groups into
+# simplified names for the group_vars/ dir. This also
+# allows both the static inventory file in the parent
+# directory and the AWS dynamic inventory in this
+# directory to be used with the same set of variables.
+
+# First declare the dynamic groups so Ansible knows they exist.
+[tag_type_gitlab_server]
+
+[tag_type_gitlab_runner]
+
+[tag_role_gitlab_runner_shell]
+
+[tag_role_gitlab_runner_public]
+
+[tag_role_gitlab_runner_private]
+
+[gitlab-ce:children]
+tag_type_gitlab_server
+
+[gitlab-runner:children]
+tag_type_gitlab_runner
+
+[gitlab-runner-shell:children]
+tag_role_gitlab_runner_shell
+
+[gitlab-runner-public:children]
+tag_role_gitlab_runner_public
+
+[gitlab-runner-private:children]
+tag_role_gitlab_runner_private
