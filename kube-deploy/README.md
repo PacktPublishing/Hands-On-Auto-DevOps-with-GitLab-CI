@@ -14,6 +14,22 @@ For example, for a local PostgreSQL with a `todo` user / password:
 export DATABASE_URL=postgres://todo:todo@localhost/todo
 ```
 
+# GitLab CI Setup
+
+To use this project within GitLab CI:
+
+1. Create a new project in GitLab.
+1. Add the following variables to GitLab under Settings / CI/CD
+   * `DBUSER`
+   * `DBPASS`
+   You can choose any value for these (e.g. `todo` for both will work).
+1. Copy the entire folder to another directory outside the tree of this Git repository. 
+1. Follow the GitLab instructions for an existing code directory.
+
+This will get the GitLab CI pipeline working through the `test` and `build` stage. To
+get it working through the `deploy` stage, set up Kubernetes for your GitLab CI project
+as shown in the video.
+
 # Provenance
 
 This app is based on three separate repositories:
