@@ -26,7 +26,7 @@ test-10:
   variables:
     POSTGRES_DB: todo
     POSTGRES_USER: "${DBUSER}"
-    POSTGRES_PASS: "${DBPASS}"
+    POSTGRES_PASSWORD: "${DBPASS}"
     DATABASE_URL: "postgres://${DBUSER}:${DBPASS}@db/todo"
   script:
     - ./ci-test.sh
@@ -40,7 +40,7 @@ test-8:
   variables:
     POSTGRES_DB: todo
     POSTGRES_USER: "${DBUSER}"
-    POSTGRES_PASS: "${DBPASS}"
+    POSTGRES_PASSWORD: "${DBPASS}"
     DATABASE_URL: "postgres://${DBUSER}:${DBPASS}@db/todo"
   script:
     - ./ci-test.sh
