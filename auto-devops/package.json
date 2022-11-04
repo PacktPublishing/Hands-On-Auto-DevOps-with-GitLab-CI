@@ -24,7 +24,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.0.0",
     "grunt": "^1.0.2",
-    "grunt-bowercopy": "^1.2.4",
+    "grunt-bowercopy": "^1.2.5",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-clean": "^1.1.0",
     "lodash": "^4.17.10",
