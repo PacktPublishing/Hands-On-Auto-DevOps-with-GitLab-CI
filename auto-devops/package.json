@@ -12,11 +12,11 @@
   "author": "Multiple, see README",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.20.1",
     "db-migrate": "^0.11.1",
     "db-migrate-pg": "^0.4.0",
     "debug": "^3.1.0",
-    "express": "^4.16.3",
+    "express": "^4.18.2",
     "pg": "^7.4.3"
   },
   "devDependencies": {
